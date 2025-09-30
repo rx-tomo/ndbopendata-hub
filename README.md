@@ -5,12 +5,38 @@
 本リポジトリに含まれるデータやサンプルは、いずれもNDBオープンデータで公開されている統計上の集計値であり、個人情報を含みません。
 
 — Quick links —
+- [APIエンドポイント](#api-endpoints)
 - [開発の進行概要](#progress)
 - [データ構造](#data-structure)
 - [データ処理アーキテクチャ](#processing-arch)
 - [データベース構成](#db-schema)
 - [開発手法（AI協働）](#dev-method)
 - [お問い合わせ](#contact)
+
+<a id="api-endpoints"></a>
+## 🌐 APIエンドポイント（v1）
+
+| パス | 説明 |
+| ---- | ---- |
+| `GET /api/v1/capabilities` | 利用可能なデータセット・ディメンション・フォーマットを返す discover API |
+| `GET /api/v1/items` | 検査項目マスタ（item_id, item_category, unit） |
+| `GET /api/v1/areas?type=prefecture` | 都道府県のコード／名称一覧（`type=secondary_medical_area` で二次医療圏） |
+| `GET /api/v1/range-labels?item_name=BMI&record_mode=basic` | レンジラベルを安定ID（`range_id`）付きで取得 |
+| `GET /api/v1/inspection-stats?...` | 人数集計。`value_range` に `range_id` を指定すると安定してフィルタ可 |
+| `GET /api/v1/health` | 稼働状態確認 |
+| `GET /api/v1/version` | データ更新日時・スキーマバージョン |
+
+### 自律探索の最小ステップ
+
+```bash
+# 1) レンジラベル発見
+curl -s "https://ndbopendata-hub.com/api/v1/range-labels?item_name=BMI&record_mode=basic"
+
+# 2) 取得した range_id を使って人数を取得
+curl -s "https://ndbopendata-hub.com/api/v1/inspection-stats?item_name=BMI&record_mode=basic&area_type=prefecture&prefecture_code=02&gender=M&age_group=40-44&value_range=142"
+```
+
+レスポンスにはレート制限ヘッダ（`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`）を付与しています。
 
 ## 📊 対象データセット
 
