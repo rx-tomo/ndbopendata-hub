@@ -38,6 +38,29 @@ curl -s "https://ndbopendata-hub.com/api/v1/inspection-stats?item_name=BMI&recor
 
 レスポンスにはレート制限ヘッダ（`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`）を付与しています。
 
+### ChatGPT Connector / MCP クライアント向けのヒント
+
+ChatGPT Connector など、`tools/call` で `arguments` に自由なフィールドを送れないクライアント向けに、サーバー側では `query` 内から構造化パラメータを抽出するフォールバックを用意しています。
+
+- `query` に `ARGS_JSON:{...}` という JSON を埋め込むと、サーバーが正規化前に `dataset` / `item_name` / `prefecture_code` などのフィールドとして復元します。
+- 例:
+  ```json
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/call",
+    "params": {
+      "name": "search",
+      "arguments": {
+        "query": "ARGS_JSON:{\"dataset\":\"inspection\",\"item_name\":\"BMI\",\"area_type\":\"prefecture\",\"prefecture_code\":\"02\",\"gender\":\"M\",\"age_group\":\"40-44\",\"record_mode\":\"basic\",\"format\":\"json\"} 特定健診 BMI 分布 青森県 男性 40-44歳"
+      }
+    }
+  }
+  ```
+- 可能な場合は `arguments` に直接フィールドを含める方が望ましいですが、上記フォールバックにより既存クライアントでも最新データを引き続き取得できます。
+
+分布が 0 件になる場合は、まず `value_range` を指定せず全分布を取得し、レスポンスの `available_value_ranges` や `meta` に記載される候補ラベルを再利用してください。
+
 ## 📊 対象データセット
 
 - 名称: 第10回NDBオープンデータ
