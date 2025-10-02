@@ -58,6 +58,10 @@ ChatGPT Connector など、`tools/call` で `arguments` に自由なフィール
   }
   ```
 - 可能な場合は `arguments` に直接フィールドを含める方が望ましいですが、上記フォールバックにより既存クライアントでも最新データを引き続き取得できます。
+- `item_name` / `prefecture_code`（もしくは `prefecture_name`）/ `gender` / `age_group` が欠けている場合、サーバー側でガイダンス付きのエラーメッセージを返し、必要なパラメータを明示します。`40-44` のような5歳刻み表記、`M` / `F` の性別コード指定を推奨しています。
+- レスポンスの `meta.data_source_type` は NDB の基本/詳細レコード種別（`basic` / `detailed`）を示し、`dataset` が `inspection` の場合でも併記されます。
+- `search` は不足条件がある場合でも広域集計を返し、`meta.guidance` に不足項目と構造化クエリ例を付与します。見つけたい粒度がある場合はガイダンスに沿って条件を追加してください。
+- `fetch` ツールでは `dataset` を `inspection` または `questionnaire` として必ず指定してください（省略すると400系エラーになります）。
 
 分布が 0 件になる場合は、まず `value_range` を指定せず全分布を取得し、レスポンスの `available_value_ranges` や `meta` に記載される候補ラベルを再利用してください。
 
