@@ -65,6 +65,16 @@ ChatGPT Connector など、`tools/call` で `arguments` に自由なフィール
 
 分布が 0 件になる場合は、まず `value_range` を指定せず全分布を取得し、レスポンスの `available_value_ranges` や `meta` に記載される候補ラベルを再利用してください。
 
+#### ChatGPT / MCP 連携チャネルの安定性（2025年9月30日時点）
+
+| チャネル | 仕組み | 安定度・備考 |
+| --- | --- | --- |
+| **ChatGPT Actions（OpenAPI）** | `https://ndbopendata-hub.com/mcp/openapi` を Actions に登録 | 現状もっとも安定。共有GPT（<https://chatgpt.com/g/g-68d617e208e08191b107df0ac54d254d-ndbopendata-hub>）で即時利用可。 |
+| **ChatGPT Connect（MCP）** | Remote MCP として `https://ndbopendata-hub.com/api/mcp` を登録 | **OpenAI がベータ提供中（2025-09-30時点）** のため応答が不安定。失敗時は Actions 経由に切り替え推奨。設定手順: <https://ndbopendata-hub.com/mcp/bridge#connect> |
+| **Claude Desktop（MCP ネイティブ）** | `mcp-bridge` / `mcp-server` をローカル経由で接続 | 開発者向け。設定例: <https://ndbopendata-hub.com/mcp/bridge#claude-desktop> |
+
+> ChatGPT Connect（MCP）は 2025年9月30日時点で OpenAI 側がベータ提供中のため、ハンドシェイクや集約処理が失敗する場合があります。安定運用が必要な場合は ChatGPT Actions（OpenAPI）をご利用ください。
+
 ## 📊 対象データセット
 
 - 名称: 第10回NDBオープンデータ
