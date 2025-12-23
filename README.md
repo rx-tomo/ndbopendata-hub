@@ -8,6 +8,7 @@
 
 — Quick links —
 - [APIエンドポイント](#api-endpoints)
+- [NDBヘルスインサイト](#insights)
 - [開発の進行概要](#progress)
 - [データ構造](#data-structure)
 - [データ処理アーキテクチャ](#processing-arch)
@@ -76,6 +77,24 @@ ChatGPT Connector など、`tools/call` で `arguments` に自由なフィール
 | **Claude Desktop（MCP ネイティブ）** | `mcp-bridge` / `mcp-server` をローカル経由で接続 | 開発者向け。設定例: <https://ndbopendata-hub.com/mcp/bridge#claude-desktop> |
 
 > ChatGPT Connect（MCP）は 2025年10月時点で OpenAI 側がベータ提供中です。個人利用は Developer Mode を有効化し、Business / Enterprise / ChatGPT Edu では管理者が Connectors を許可しているか確認してください。安定運用が必要な場合は ChatGPT Actions（OpenAPI）をご利用ください。
+
+<a id="insights"></a>
+## 📈 NDBヘルスインサイト（分析記事）
+
+NDBオープンデータから抽出した地域別・性別・年代別の健康リスク分析を公開しています。
+
+**🌐 インサイト一覧**: https://ndbopendata-hub.com/insights
+
+| カテゴリ | 注目記事 |
+|---------|---------|
+| 代謝・肥満 | [沖縄男性メタボ複合リスク](https://ndbopendata-hub.com/insights/okinawa-metabolic-hotspot/male-prefecture) |
+| 腎機能 | [君津男性 内臓脂肪×腎リスク](https://ndbopendata-hub.com/insights/kimitsu-visceral-ckd/male-secondary) |
+| 糖尿病 | [高崎・安中 糖腎ダブルリスク](https://ndbopendata-hub.com/insights/takasaki-diabetes-ckd/male-secondary) |
+| 血圧 | [最上男性 重度高血圧ギャップ](https://ndbopendata-hub.com/insights/mogami-hypertension-awareness/male-secondary) |
+| 女性健康 | [山形女性 ロコモ兆候](https://ndbopendata-hub.com/insights/yamagata-female-mobility/female-prefecture) |
+| 生活習慣 | [青森男性 運動不足×血糖](https://ndbopendata-hub.com/insights/aomori-exercise-glucose/male-prefecture) |
+
+> 本分析はAIがNDBオープンデータを活用して試験的に抽出したインサイトです。
 
 ## 📊 対象データセット
 
