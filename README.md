@@ -9,6 +9,7 @@
 — Quick links —
 - [更新情報](#release-update)
 - [APIエンドポイント](#api-endpoints)
+- [外部AIから使う](#external-ai-access)
 - [NDBヘルスインサイト](#insights)
 - [開発の進行概要](#progress)
 - [データ構造](#data-structure)
@@ -18,7 +19,7 @@
 - [お問い合わせ](#contact)
 
 <a id="release-update"></a>
-## 🆕 更新情報（2026年7月7日）
+## 🆕 更新情報（2026年7月14日）
 
 第11回NDBオープンデータを追加し、公開サイトでは第10回・第11回を切り替えて参照できるようにしました。APIでは `release=10` / `release=11` / `release=latest` を指定できます。
 
@@ -51,52 +52,37 @@
 
 ```bash
 # 1) レンジラベル発見
-curl -s "https://ndbopendata-hub.com/api/v1/range-labels?item_name=BMI&record_mode=basic"
+curl -s "https://ndbopendata-hub.com/api/v1/range-labels?release=latest&item_name=BMI&record_mode=basic"
 
 # 2) 取得した range_id を使って人数を取得
-curl -s "https://ndbopendata-hub.com/api/v1/inspection-stats?item_name=BMI&record_mode=basic&area_type=prefecture&prefecture_code=02&gender=M&age_group=40-44&value_range=142"
+curl -s "https://ndbopendata-hub.com/api/v1/inspection-stats?release=latest&item_name=BMI&record_mode=basic&area_type=prefecture&prefecture_code=02&gender=M&age_group=40-44&value_range=142"
 ```
 
 レスポンスにはレート制限ヘッダ（`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`）を付与しています。
 
-### ChatGPT Apps / MCP クライアント向けのヒント
+<a id="external-ai-access"></a>
+## 🤖 外部AIから使う
 
-ChatGPT Apps など、`tools/call` で `arguments` に自由なフィールドを送れないクライアント向けに、サーバー側では `query` 内から構造化パラメータを抽出するフォールバックを用意しています。
+> [!NOTE]
+> **production公開済みです。** 2026-07-14の同一runで、`/mcp` のstable `2025-11-25`、7 tools、任意SQLtool不存在、release-aware REST/OpenAPI、旧任意SQL経路404を確認しました。
 
-- `query` に `ARGS_JSON:{...}` という JSON を埋め込むと、サーバーが正規化前に `dataset` / `item_name` / `prefecture_code` などのフィールドとして復元します。
-- 例:
-  ```json
-  {
-    "jsonrpc": "2.0",
-    "id": 1,
-    "method": "tools/call",
-    "params": {
-      "name": "search",
-      "arguments": {
-        "query": "ARGS_JSON:{\"dataset\":\"inspection\",\"item_name\":\"BMI\",\"area_type\":\"prefecture\",\"prefecture_code\":\"02\",\"gender\":\"M\",\"age_group\":\"40-44\",\"record_mode\":\"basic\",\"format\":\"json\"} 特定健診 BMI 分布 青森県 男性 40-44歳"
-      }
-    }
-  }
-  ```
-- 可能な場合は `arguments` に直接フィールドを含める方が望ましいですが、上記フォールバックにより既存クライアントでも最新データを引き続き取得できます。
-- `item_name` / `prefecture_code`（もしくは `prefecture_name`）/ `gender` / `age_group` が欠けている場合、サーバー側でガイダンス付きのエラーメッセージを返し、必要なパラメータを明示します。`40-44` のような5歳刻み表記、`M` / `F` の性別コード指定を推奨しています。
-- レスポンスの `meta.data_source_type` は NDB の基本/詳細レコード種別（`basic` / `detailed`）を示し、`dataset` が `inspection` の場合でも併記されます。
-- `search` は不足条件がある場合でも広域集計を返し、`meta.guidance` に不足項目と構造化クエリ例を付与します。見つけたい粒度がある場合はガイダンスに沿って条件を追加してください。
-- `fetch` ツールでは `dataset` を `inspection` または `questionnaire` として必ず指定してください（省略すると400系エラーになります）。
+公開面は集計データ専用のread-only / no-auth APIです。新規MCPクライアントには、stable MCP `2025-11-25`のStreamable HTTP endpoint `https://ndbopendata-hub.com/mcp` を登録します。旧 `https://ndbopendata-hub.com/api/mcp` は互換aliasで、新規設定には使用しません。
 
-分布が 0 件になる場合は、まず `value_range` を指定せず全分布を取得し、レスポンスの `available_value_ranges` や `meta` に記載される候補ラベルを再利用してください。
-
-#### ChatGPT / MCP 連携チャネル（2026年3月時点）
-
-| チャネル | 仕組み | 安定度・備考 |
+| 利用先 | 接続方式 | 更新後の登録先 |
 | --- | --- | --- |
-| **ChatGPT Actions（OpenAPI）** | `https://ndbopendata-hub.com/mcp/openapi` を Actions に登録 | もっとも安定。共有GPT（<https://chatgpt.com/g/g-68d617e208e08191b107df0ac54d254d-ndbopendata-hub>）で即時利用可。 |
-| **ChatGPT Apps（MCP）** | ChatGPT 設定 → Apps → MCP で `https://ndbopendata-hub.com/api/mcp` を登録 | 正式機能。Plus / Team / Enterprise で利用可。設定手順: <https://ndbopendata-hub.com/mcp/guide#chatgpt-apps> |
-| **Claude Desktop** | `claude_desktop_config.json` に Remote MCP として登録 | 設定例: <https://ndbopendata-hub.com/mcp/guide#claude-desktop> |
-| **Claude Code** | `.mcp.json` に Remote MCP として登録 | 設定例: <https://ndbopendata-hub.com/mcp/guide#claude-code> |
-| **Cursor / Windsurf** | エディタ設定画面から MCP サーバーとして登録 | 設定例: <https://ndbopendata-hub.com/mcp/guide#cursor-windsurf> |
+| **claude.ai** | Custom Connector / Remote MCP | `https://ndbopendata-hub.com/mcp` |
+| **Claude Desktop** | Custom Connector / Remote MCP | `https://ndbopendata-hub.com/mcp` |
+| **Claude Code** | `claude mcp add --transport http ndb-opendata ...` | `https://ndbopendata-hub.com/mcp` |
+| **Codex CLI / Desktop / IDE** | `codex mcp add ndb-opendata --url ...` | `https://ndbopendata-hub.com/mcp` |
+| **ChatGPT Apps** | Developer mode / Remote MCP | `https://ndbopendata-hub.com/mcp` |
+| **OpenAI Responses API** | built-in `mcp` tool | `server_url: https://ndbopendata-hub.com/mcp` |
+| **GPT Actions** | REST / OpenAPI（MCPとは別経路） | `https://ndbopendata-hub.com/mcp/openapi` |
 
-> 5つの接続方法の詳細は <https://ndbopendata-hub.com/mcp/guide> を参照してください。
+各data toolとrelease-aware RESTでは `release=10|11|latest`（既定`latest`）を指定できます。一連の分析では同じ公開回を維持してください。検査recordは物理table間でIDが衝突し得るため、単一recordの`fetch`ではなく`ndb_inspection_search`を使用します。`fetch`は質問票record専用です。
+
+direct PostgreSQL MCP、旧stdio/SSE bridge、利用者指定SQLの`/api/mcp-query`は退役済みです。新しい環境へDB credential、bridge設定、旧URLをコピーしないでください。
+
+画面付きの[自然言語アクセスガイド](https://ndbopendata-hub.com/mcp/guide)もproduction反映済みです。HTTP production smokeは完了していますが、ChatGPT、Claude、Codex等の各製品UIからのlive接続確認は製品ごとに別管理します。
 
 <a id="insights"></a>
 ## 📈 NDBヘルスインサイト（分析記事）
@@ -154,21 +140,21 @@ NDBオープンデータから抽出した地域別・性別・年代別の健�
 - `questionnaire_questions`: 質問項目マスタ（22問）
 - `questionnaire_answer_options`: 回答選択肢マスタ
 - `questionnaire_responses`: 回答データ（都道府県別・二次医療圏別）
-- `questionnaire_import_history`: インポート履歴
+- `questionnaire_import_history`: 内部インポート履歴（公開API/MCPから非公開）
 
 ### 特定健診検査データ系
 - `health_inspection_items`: 検査項目マスタ（27項目）
 - `health_inspection_value_ranges`: 検査値階層マスタ（性別対応を含む）
 - `basic_checkup_results`: 基本情報レコードの検査結果（地域・性別・年齢層・値範囲ごとの集計）
 - `detailed_checkup_results`: 詳細情報レコードの検査結果（医師判定ありの層）
-- `health_inspection_import_history`: インポート履歴
+- `health_inspection_import_history`: 内部インポート履歴（公開API/MCPから非公開）
 
 ### 地域マスタ
 - `prefectures`: 都道府県マスタ
 - `secondary_medical_areas`: 二次医療圏マスタ
 
 <a id="progress"></a>
-## 🔄 開発の進行概要（2026年7月7日）
+## 🔄 開発の進行概要（2026年7月14日）
 
 - 2025-06（初期）
   - 仮のWebページ開発（プロトタイプUI／試験的API）。NDB第10回データの基本設計・DB正規化・初期の参照用画面を短期で構築。
@@ -182,6 +168,7 @@ NDBオープンデータから抽出した地域別・性別・年代別の健�
   - 第11回NDBオープンデータを追加し、第10回・第11回・latestを切り替えられる構成へ更新。
   - 第10回と同じ論理スキーマで第11回の検査・質問票データを追加し、公開回の取り違えを避けるためAPI/UIをrelease-aware化。
   - インサイトページの一部を第11回データで再確認し、第10回・第11回比較の特集ページを追加。
+  - 外部AIアクセスを`/mcp`のRemote MCP、`/api/v1/*`のREST、`/mcp/openapi`のOpenAPIへ整理し、direct DB・旧bridge・任意SQL経路を退役。
 
 データ実装の到達点（抜粋）
 - 質問票データ: 第10回 278,334レコード、第11回 278,816レコード。
